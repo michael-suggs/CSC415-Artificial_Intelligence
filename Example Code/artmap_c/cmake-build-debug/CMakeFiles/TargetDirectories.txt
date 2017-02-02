@@ -1,3 +1,0 @@
-/Users/Michael/Documents/UNCW/Jahr 4/Herbst 2016/CSC 415/Example Code/artmap_c/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/Michael/Documents/UNCW/Jahr 4/Herbst 2016/CSC 415/Example Code/artmap_c/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/Michael/Documents/UNCW/Jahr 4/Herbst 2016/CSC 415/Example Code/artmap_c/cmake-build-debug/CMakeFiles/artmap_c.dir

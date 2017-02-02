@@ -1,6 +1,0 @@
-Just reset all TD weights.
-Just reset all TD weights.
-*****> res.log
-Input file is ART2.inp
-rho=0.9000  theta=0.3000  h=0.100
-nsteps=100 ac_dif=0.00100 z_dif=0.0100
