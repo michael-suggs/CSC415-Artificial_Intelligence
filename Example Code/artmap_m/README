@@ -1,0 +1,236 @@
+/*******************************************************************************
+ * README v.2 (Feb. 9, 02)
+ *
+ * Description:
+ *	Readme for artmap_m.zip
+ *	See http://www.cns.bu.edu/~artmap for further details.
+ * Authors:
+ *	Suhas Chelian, Norbert Kopco
+ ******************************************************************************/
+
+/*******************************************************************************
+ * Contents
+ ******************************************************************************/
+The attached archive artmap_m.zip contains a sample implementation of
+the ARTMAP neural network, in many of its variations. The archive
+contains the following files:
+
+artmap_shell.m
+		- a sample program of how to use a single ARTMAP network
+artmap_shell_vote.m
+		- a sample program of how to use voting with ARTMAP networks
+artmap_init.m
+		- initialization for a single ARTMAP network
+artmap_train_large.m
+		- training an ARTMAP network on a set
+artmap_train_small.m
+		- training an ARTMAP network for a single input
+artmap_test_large.m
+		- testing an ARTMAP network on a set
+artmap_test_small.m
+		- testing an ARTMAP network for a single input
+input.dat
+        	- sample training set containing 1000 training
+		  points for the Circle-in-the-Square problem 
+		  (every row of this text file contains the input
+		  values for one training pattern)
+output.dat
+        	- the file containing expected output classes for
+		  the training set (every row of this text file
+		  contains the class label for the corresponding
+		  input in the file input.dat)
+te_input.dat
+        	- sample testing set containing 10000 testing
+		  points for the Circle-in-the-Square problem
+		  (format as in input.dat)
+te_output.dat
+         	- file containing expected output classes for the
+		  testing set (format as in output.dat)
+Makefile	
+                - useful for zipping this package
+README		
+                - this file
+
+The training and testing files (input.dat, output.dat, te_input.dat,
+te_output.dat) must be placed into the same directory as the code.
+
+/*******************************************************************************
+ * Compiling and Running
+ ******************************************************************************/
+The code, written in Matlab, can be run on almost any platform with
+Matlab.  To simulate a single ARTMAP network, run it under Matlab use
+following command:
+
+	artmap_shell
+
+Toggle "traceInit" if you want to see how the network was initialized;
+toggle "traceTrain" if you want to see what weights the network
+developed after training.
+
+You can also simulate multiple ARTMAP networks that vote to make a
+decision by typing:
+
+	artmap_shell_vote
+
+You can change the number of voters through the "numVoters" variable,
+and decide whether WTA compression is done for each network before
+voting or not through the "voteWTA" variable.
+
+/*******************************************************************************
+ * Configuration
+ ******************************************************************************/
+To choose which ARTMAP system you would like, set MAPTYPEArg in
+artmap_init.m to 1 for Fuzzy ARTMAP, 2 for ART-EMAP, 3 for ARTMAP-IC,
+or 4 for dARTMAP; see artmap_shell.m for an example.  From there,
+the system configuration is automatic.  See
+http://www.cns.bu.edu/~artmap for the papers from which one can
+compare the different versions of ARTMAP.
+
+If you would like to do advanced configuration, set defaultParams to 0
+in artmap_init.m, and pass in a cell array; see artmap_shell.m for an
+example.
+
+Please note that dARTMAP must use the Choice-by-difference signal
+rule, and the Increased CAM Gradient during training and testing.
+Other ARTMAP's can still use the Choice-by-difference signal rule,
+even though they were not orignally designed with it.  Similarly,
+other ARTMAP's did not used Increased CAM Gradient during testing but
+they now can (do not use it during training).  If you wish, you can
+change to using the Simple CAM Gradient by toggling the DO_TEST_SCG
+flag (through 'varargin').  Also, dARTMAP gets greatest code
+compression (fewer nodes) with DO_KAPPA_VEC  set to 0.  dARTMAP was
+not originally designed to handle ARTb output, which DO_KAPPA_VEC
+simulates.
+
+In addition, although MT- was not orignally applied to Fuzzy ARTMAP or
+ART-EMAP, it can still be used with them.  If you wish, you can change to MT+
+(epsilon > 0, again through 'varargin'), but you then lose the ability
+to encode inconsistent case.  (Inconsistent cases are cases when the
+same input is mapped to different outputs.)
+
+In addition, note that each implementation differs slightly from the
+(Carpenter et al., 1998b) paper in that Theta is now defined to be
+Theta from the paper - M.  This changes the Increased CAM Gradient set
+{ j | (2-alpha)M-Tj > 0 } to { j | M-Tj > 0 } (see Step 2a in
+Training, and 2i in Testing); also Tu is now alpha*M, not M.  These
+changes effect the dynamic range of the match function, T, but not the
+algorithms overall behavior.  You can toggle back to the original
+paper's definition by setting DO_OLD_Tj (through 'varargin').
+
+Before compilation of the code, the following parameters of the system
+need to be specified for each file:
+
+********************************************************************************
+artmap_init.m:
+
+  MAPTYPE
+    1 - Fuzzy ARTMAP
+    2 - ART-EMAP
+    3 - ARTMAP_IC
+    4 - DIST_ARTMAP
+  M
+   The number of input dimensions, not including complement coding.
+  L
+    The number of output classes, labeled 1 to L.
+  MAX_F2_SIZE
+    The maximum number of F2 nodes.
+  defaultParams
+    Whether to use default parameters or not.
+
+  Other parameters can be set by using 'varargin':
+
+  alpha
+    Parameter in the Choice-by-difference and Weber signal rule
+
+    Loosely speaking, large values of alpha will not recruit
+    uncommited nodes as quickly.  This can also be achieved by making
+    T_u small with the Choice-by-difference signal rule.
+  p
+    Power in the increased gradient or simple CAM rule 
+
+    p determines the degree contrast enchancement in F2 for testing.
+    Large p are equivalent to Winner-take-all (choice behavior), and
+    small p lead to a more distributed activity.  Setting p < 1 is not
+    recommended.
+  beta
+    Learning rate  
+  epsilon
+    Match tracking parameter  
+  rho_a_bar
+    ARTa baseline vigilance parameter  
+  rho_ab
+    Mapfield vigilance
+  T_u
+    F0 -> F2 signal for uncommited nodes
+  MAX_F2_SIZE
+    This constant defines the upper bound on the number of coding
+    units in the Layer F2 (F2 size is also equal to the number of units in
+    F3 layer.)
+
+See the papers at http://www.cns.bu.edu/~artmap for further information 
+on how the parameters effect performance.
+
+********************************************************************************
+artmap_train_large.m:
+
+  trainArg
+   The training points.  The first 1:M columns are the inputs, and
+    the M+1st column is the output.
+  trainNArg
+    The number of training points.
+  forceInputHC
+    Whether to force input hypercubing or not.
+  forceOutputHC
+    Whether to force proper indexing of output classes or not.
+  verbose
+    A value of 1 will show the beginning and ending of training; a
+    value of 2 will show progress incrementally.
+  defaultEpochs
+    Whether to use default training regime or not.
+
+  Other training regimes can be set by using 'varargin':
+
+  EPOCHS
+    Number of passes over set
+  shuffle
+    Whether to shuffle training points after each epoch or not
+  shuffleSeed
+    What to seed the shuffle order with
+
+Please note that input must be in the unit hypercube (all dimensions
+are placed in the [0,1] interval).  The algorithm will not work
+properly if this is not so.  Similarly, the output must be indexed
+from 1 to L.
+
+********************************************************************************
+artmap_test_large.m
+
+  testArg
+   The testing points.  The first 1:M columns are the inputs, and
+   the M+1st column is the output.
+ testNArg
+   The number of testing points.
+ forceInputHC
+   Whether to force input hypercubing or not.
+ forceOutputHC
+   Whether to force proper indexing of output classes or not.
+ verbose
+    A value of 1 will show the beginning and ending of training; a
+    value of 2 will show progress incrementally; a value of 3 will
+    show the index of each incorrectly predicted output.
+
+Please note that input must be in the unit hypercube (all dimensions
+are placed in the [0,1] interval).  The algorithm will not work
+properly if this is not so.  Similarly, the output must be indexed
+from 1 to L.
+
+Common abbreviations you may run into include:
+
+CBD	Choice-by-difference
+WTA	Winner-take-all (choice)
+ICG	Increased CAM gradient
+IC	Instance counting
+SCG	Simple CAM gradient
+
+Lastly, the code has been broken into functions to allow greater
+readibility, but if you prefer monolothic code, see version 1.

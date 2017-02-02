@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../ART 2/.idea/ART 2.iml" filepath="$PROJECT_DIR$/../ART 2/.idea/ART 2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Project 1 - Neural Network.iml" filepath="$PROJECT_DIR$/.idea/Project 1 - Neural Network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Project 2 - Markov Model/.idea/Project 2 - Markov Model.iml" filepath="$PROJECT_DIR$/../Project 2 - Markov Model/.idea/Project 2 - Markov Model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Project 3 - K-Clustering/.idea/Project 3 - K-Clustering.iml" filepath="$PROJECT_DIR$/../Project 3 - K-Clustering/.idea/Project 3 - K-Clustering.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Project 4 - Bayesian Classification/.idea/Project 4 - Bayesian Classification.iml" filepath="$PROJECT_DIR$/../Project 4 - Bayesian Classification/.idea/Project 4 - Bayesian Classification.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Project 5 - Genetic Algorithm/.idea/Project 5 - Genetic Algorithm.iml" filepath="$PROJECT_DIR$/../Project 5 - Genetic Algorithm/.idea/Project 5 - Genetic Algorithm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Project 6 - Particle Swarm/.idea/Project 6 - Particle Swarm.iml" filepath="$PROJECT_DIR$/../Project 6 - Particle Swarm/.idea/Project 6 - Particle Swarm.iml" />
+    </modules>
+  </component>
+</project>

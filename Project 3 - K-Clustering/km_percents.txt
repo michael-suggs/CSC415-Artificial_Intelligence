@@ -1,0 +1,45 @@
+60 points misclassified in set 1.
+93.75% of points in set 1 were classified correctly.
+6.25% of points in set 1 were classified incorrectly.
+
+42 points misclassified in set 2.
+37.5% of points in set 2 were classified correctly.
+62.5% of points in set 2 were classified incorrectly.
+
+24 points misclassified in set 3.
+70.58823529411765% of points in set 3 were classified correctly.
+29.411764705882355% of points in set 3 were classified incorrectly.
+
+
+*** END ***
+
+14 points misclassified in set 1.
+18.181818181818183% of points in set 1 were classified correctly.
+81.81818181818183% of points in set 1 were classified incorrectly.
+
+1 points misclassified in set 2.
+1.7543859649122806% of points in set 2 were classified correctly.
+98.24561403508771% of points in set 2 were classified incorrectly.
+
+6 points misclassified in set 3.
+7.894736842105263% of points in set 3 were classified correctly.
+92.10526315789474% of points in set 3 were classified incorrectly.
+
+
+*** END ***
+
+3 points misclassified in set 1.
+5.0% of points in set 1 were classified correctly.
+95.0% of points in set 1 were classified incorrectly.
+
+80 points misclassified in set 2.
+100.0% of points in set 2 were classified correctly.
+0.0% of points in set 2 were classified incorrectly.
+
+70 points misclassified in set 3.
+100.0% of points in set 3 were classified correctly.
+0.0% of points in set 3 were classified incorrectly.
+
+
+*** END ***
+

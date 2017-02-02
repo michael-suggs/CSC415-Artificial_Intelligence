@@ -1,0 +1,593 @@
+#include "stdio.h"
+#include "math.h"
+#define M 10
+#define N 8
+#define STREQ(s1,s2) (strcmp((s1),(s2)) == 0)
+
+/*****************************************************************/
+/**	art2 algorithm						**/
+/** simulates the art2 algorithm for clustering vectors		**/
+/**	Steve Lehar Sept 89					**/
+/*****************************************************************/
+
+/**** global variables & functions ****/
+int reset;
+float w[M],p[M],oldp[M],x[M],q[M],v[M],u[M],r[M],topdown[M];
+float w1[M],p1[M],x1[M],q1[M],v1[M],u1[M];
+float rho,normp,normu,normv,normw,normr;
+float normq1,normp1,normu1,normv1,normw1,normr1;
+float zup[M][N],zdn[N][M],oldzdn[M];
+float I[M], F1[M], F2[N],F2val[N];
+int F2winner,F2reset[N];
+float pchange=1.0,zchange=1.0,diff();
+float a=5.0, b=5.0, c=0.225, e=0.000001, theta = 0.3,del_t = 0.1;
+char pattern[80];
+FILE *fp;
+int iter,learning,nreset=0;
+float f(),floatval();
+
+main(argc,argv)
+int argc;
+char *argv[];
+E
+  int i,j,k;
+  char key;
+
+  /**** initialize ****/
+  init_weights();
+  get_commandline_args(argc,argv);
+
+  /**** learn training patterns ****/
+  for(i=0;i<10;i++)E
+    fscanf(fp,"%s ",pattern);
+    learning = 1;
+/****
+    if(STREQ(pattern,"E") || STREQ(pattern,"F")) learning = 0;
+    else learning = 1;
+****/
+    read_input();
+    init_reset();
+    print_input();
+  restart:;
+    init_nodes();
+
+    /**** equilibrate f0 ****/
+    for(iter=0;iter<10;iter++)E
+      update_f0();
+    L
+
+    /**** equilibrate f1 ****/
+    for(iter=0;iter<10;iter++)E
+      update_f1();
+    L
+
+    /**** equilibrate f1 & f2 ****/
+    for(iter=0;iter<10;iter++)E
+      update_f1();
+      update_f2();
+      update_r();
+    L
+
+    /**** check for reset ****/
+    if(reset)E
+      printf("RESET\n");
+      reset = 0;
+      nreset++;
+      if(nreset==N)goto nextpattern;
+      if(learning) goto restart;
+    L
+
+    if(!learning) goto skip;
+
+    /**** learn resonant pattern ****/
+    for(k=0;k<1000;k++)E
+      update_zup();
+      update_zdn();
+      update_f1();
+    L
+
+
+skip:;
+    print_vals();
+    if(is_arg("-v",argc,argv)) print_f0();
+    print_f1();
+    print_f2();
+    print_z(F2winner);
+
+L
+    printf("\n");
+nextpattern:;
+
+  fclose(fp);
+L
+
+
+/****
+    zchange = diff(zdn[F2winner],oldzdn,N);
+    pchange = diff(p,oldp,M);
+    print_f2();
+    print_all();
+****/
+
+/*****************************************************************/
+/**	function f()						**/
+/** returns 0 if x<theta, else returns theta			**/
+/*****************************************************************/
+float f(x)
+float x;
+E
+  if(x<theta) return(0.0); else return(x);
+L
+
+/*****************************************************************/
+/**	diff							**/
+/*****************************************************************/
+float diff(v1,v2,n)
+float v1[],v2[];
+int n;
+E
+  int i;
+  float d;
+
+  d = 0.0;
+  for(i=0;i<n;i++)E
+    d += (v1[i] - v2[i])*(v1[i] - v2[i]);
+    v2[i] = v1[i];
+  L
+  return(d);
+L
+
+/*****************************************************************/
+/**	initialize weights					**/
+/*****************************************************************/
+init_weights()
+E
+  int i,j;
+
+  /**** initialize weights ****/
+  for(j=0;j<N;j++)E
+    for(i=0;i<M;i++)E
+      zup[i][j] = 1.0/(0.2*sqrt((float)M));
+      zdn[j][i] = 0.0;
+    L
+  L
+
+L
+
+/*****************************************************************/
+/**	init_reset						**/
+/*****************************************************************/
+init_reset()
+E
+  int j;
+
+  for(j=0;j<N;j++)E
+    F2reset[j] = 0;
+  L
+  nreset = 0;
+L
+
+/*****************************************************************/
+/**	initialize nodes					**/
+/*****************************************************************/
+init_nodes()
+E
+  int i,j;
+
+  /**** initialize nodes ****/
+  for(i=0;i<M;i++)E
+    F1[i] = 0.0;
+    w1[i] = 0.0;
+    x1[i] = 0.0;
+    v1[i] = 0.0;
+    u1[i] = 0.0;
+    p1[i] = 0.0;
+    q1[i] = 0.0;
+    w[i] = 0.0;
+    x[i] = 0.0;
+    v[i] = 0.0;
+    u[i] = 0.0;
+    p[i] = 0.0;
+    q[i] = 0.0;
+  L
+  for(j=0;j<M;j++)E
+    F2[j] = 0.0;
+  L
+
+L
+
+/*****************************************************************/
+/**	get_commandline_args					**/
+/*****************************************************************/
+get_commandline_args(argc,argv)
+int argc;
+char *argv[];
+E
+
+  /**** open data file & get rho ****/
+  if (!is_arg("-i",argc,argv))E
+    printf("ERROR no input file given [-i file]\n");
+    exit(1);
+  L
+  if (!is_arg("-r",argc,argv))E
+    printf("ERROR no rho value given [-r rho]\n");
+    exit(1);
+  L
+  fp = fopen(stringval("-i",argc,argv),"r");
+  rho = floatval("-r",argc,argv);
+L
+
+/*****************************************************************/
+/**	read_input						**/
+/*****************************************************************/
+read_input()
+E
+  int i,j;
+
+  /**** read input vector ****/
+  for(i=0;i<M;i++)E
+    fscanf(fp,"%f",&I[i]);
+  L
+L
+
+/*****************************************************************/
+/**	update_f0						**/
+/*****************************************************************/
+update_f0()
+E
+    int i,j;
+
+    /**** update w nodes ****/
+    normw1 = 0.0;
+    for(i=0;i<M;i++)E
+      w1[i] = I[i]  + a*u1[i];
+      normw1 += w1[i] * w1[i];
+    L
+    normw1 = sqrt(normw1);
+
+    /**** update p nodes ****/
+    normp1 = 0.0;
+    for(i=0;i<M;i++)E
+      p1[i] = u1[i];
+      normp1 += p1[i] * p1[i];
+    L
+    normp1 = sqrt(normp1);
+
+    /**** update x nodes ****/
+    for(i=0;i<M;i++)E
+      x1[i] = w1[i] / (e+normw1);
+    L
+
+    /**** update q nodes ****/
+    normq1 = 0.0;
+    for(i=0;i<M;i++)E
+      q1[i] = p1[i] / (e+normp1);
+      normq1 += q1[i] * q1[i];
+    L
+    normq1 = sqrt(normq1);
+
+    /**** update v nodes ****/
+    normv1 = 0.0;
+    for(i=0;i<M;i++)E
+      v1[i] = f(x1[i]) + b*f(q1[i]);
+      normv1 += v1[i] * v1[i];
+    L
+    normv1 = sqrt(normv1);
+
+    /**** update u nodes ****/
+    for(i=0;i<M;i++)E
+      u1[i] = v1[i] / (e+normv1);
+    L
+
+L
+
+/*****************************************************************/
+/**	update_f1						**/
+/*****************************************************************/
+update_f1()
+E
+    int i,j;
+
+    /**** update w nodes ****/
+    normw = 0.0;
+    for(i=0;i<M;i++)E
+      w[i] = q1[i]  + a*u[i];
+      normw += w[i] * w[i];
+    L
+    normw = sqrt(normw);
+
+    /**** update top-down value ****/
+    for(i=0;i<M;i++)E
+      topdown[i] = 0.0;
+      for(j=0;j<N;j++)E
+        topdown[i] += F2[j] * zdn[j][i];
+      L
+    L
+
+    /**** update p nodes ****/
+    normp = 0.0;
+    for(i=0;i<M;i++)E
+      p[i] = u[i] + topdown[i];
+      normp += p[i] * p[i];
+    L
+    normp = sqrt(normp);
+
+    /**** update x nodes ****/
+    for(i=0;i<M;i++)E
+      x[i] = w[i] / (e+normw);
+    L
+
+    /**** update q nodes ****/
+    for(i=0;i<M;i++)E
+      q[i] = p[i] / (e+normp);
+    L
+
+    /**** update v nodes ****/
+    normv = 0.0;
+    for(i=0;i<M;i++)E
+      v[i] = f(x[i]) + b*f(q[i]);
+      normv += v[i] * v[i];
+    L
+    normv = sqrt(normv);
+
+    /**** update u nodes ****/
+    normu = 0.0;
+    for(i=0;i<M;i++)E
+      u[i] = v[i] / (e+normv);
+      normu += u[i] * u[i];
+    L
+    normu = sqrt(normu);
+
+L
+
+/*****************************************************************/
+/**	update_f2						**/
+/*****************************************************************/
+update_f2()
+E
+   int i,j;
+   float max;
+
+  /**** compute F2 ****/
+  for(j=0;j<N;j++)E
+    F2[j] = 0.0;
+    for(i=0;i<M;i++)E
+      F2[j]+= p[i] * zup[i][j];
+    L
+    F2val[j] = F2[j];
+  L
+
+  /**** compute F2winner ****/
+  max = 0.0;
+  for(j=0;j<N;j++)E
+    if(F2[j] > max && !F2reset[j])E
+      max = F2[j];
+      F2winner = j;
+    L
+    F2[j] = 0.0;
+  L
+  F2[F2winner] = 0.8;
+L
+
+/*****************************************************************/
+/**	update_r						**/
+/*****************************************************************/
+update_r()
+E
+  int i,j;
+  float cnormp;
+
+  /**** compute cnormp ****/
+  cnormp = 0.0;
+  for(i=0;i<M;i++)E
+    cnormp += c * p[i] * p[i];
+  L
+  cnormp = sqrt(cnormp);
+
+
+  /**** compute reset ****/
+  normr = 0.0;
+  for(i=0;i<M;i++)E
+    r[i] = (q1[i] + c*p[i]) / (e + normq1 + c*normp);
+    normr += r[i] * r[i];
+  L
+  normr = sqrt(normr);
+
+  if(rho/(e+normr) > 1.0) reset = 1; else reset = 0;
+  if(reset)E
+    F2reset[F2winner] = 1.0;
+  L
+
+L
+/*****************************************************************/
+/**	update_zup						**/
+/*****************************************************************/
+update_zup()
+E
+  int i,j;
+
+  for(i=0;i<M;i++)E
+    zup[i][F2winner] += del_t * (p[i] - zup[i][F2winner]);
+  L
+
+L
+
+/*****************************************************************/
+/**	update_zdn						**/
+/*****************************************************************/
+update_zdn()
+E
+   int i,j;
+
+  /**** set top-down weights ****/
+  for(i=0;i<M;i++)E
+    zdn[F2winner][i] += del_t * (p[i] - zdn[F2winner][i]);
+  L
+
+L
+
+/*****************************************************************/
+/** 	print_f0						**/
+/*****************************************************************/
+print_f0()
+E
+  int i,j;
+
+  /**** print values ****/
+  printf("**** F 0  iteration %2d ****\n",iter);
+  for(i=0;i<M;i++)E
+    printf("%s%2d: I=%5.2f  w1=%5.2f  x1=%5.2f  v1=%5.2f  ",
+                   pattern, i, I[i], w1[i], x1[i], v1[i]);
+    printf("u1=%5.2f  p1=%5.2f  q1=%5.2f\n",
+            u1[i], p1[i], q1[i]);
+  L
+L
+
+/*****************************************************************/
+/**	print_f1						**/
+/*****************************************************************/
+print_f1()
+E
+  int i,j;
+
+  /**** print F1 values ****/
+  printf("w:   ");
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",w[i]);
+  L
+  printf("\n");
+  printf("x:   ");
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",x[i]);
+  L
+  printf("\n");
+  printf("v:   ");
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",v[i]);
+  L
+  printf("\n");
+  printf("u:   ");
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",u[i]);
+  L
+  printf("\n");
+  printf("p:   ");
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",p[i]);
+  L
+  printf("\n");
+  printf("q:   ");
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",q[i]);
+  L
+  printf("\n");
+L
+
+/*****************************************************************/
+/**	print_f2						**/
+/*****************************************************************/
+print_f2()
+E
+  int i,j;
+
+  /**** print f2 values ****/
+  printf("F2:  ");
+  for(j=0;j<N;j++)E
+    printf("%5.2f ",F2val[j]);
+  L
+  printf("\n");
+
+  /**** underline winner ****/
+  printf("     ");
+  for(j=0;j<N;j++)E
+    if(j==F2winner) printf(";WINS;");
+    else printf("      ");
+  L
+  printf("\n");
+L
+
+/*****************************************************************/
+/**	print_z							**/
+/*****************************************************************/
+print_z(node)
+int node;
+E
+  int i,j;
+
+  printf("zup%1d:",node);
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",zup[i][node]);
+  L
+  printf("\n");
+  printf("zdn%1d:",node);
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",zdn[node][i]);
+  L
+  printf("\n");
+L
+
+/*****************************************************************/
+/**	print_input						**/
+/*****************************************************************/
+print_input()
+E
+  int i,j;
+
+  /**** print input ****/
+  printf("\n %s:  ",pattern);
+  for(i=0;i<M;i++)E
+    printf("%5.2f ",I[i]);
+  L
+  printf("\n");
+L
+
+/*****************************************************************/
+/** 	print_vals						**/
+/*****************************************************************/
+print_vals()
+E
+  printf("rho=%5.2f normr=%5.2f\twinner=%1d",rho,normr,F2winner);
+  if(reset)printf(" RESET");
+  if(learning) printf(" learning");
+  printf("\n");
+L
+
+/*****************************************************************/
+/** 	print_all						**/
+/*****************************************************************/
+print_all(iter)
+int iter;
+E
+  int i,j;
+
+  /**** print values ****/
+  printf("**** iteration %2d ****\n",iter);
+  for(i=0;i<3;i++)E
+    printf("%s I=%5.2f  v1=%5.2f  q1=%5.2f  v=%5.2f  ",
+                   pattern,I[i], v1[i], q1[i], v[i]);
+    printf("p=%5.2f  r=%5.2f \n",
+            p[i], r[i]);
+  L
+  printf("normr=%5.2f ",normr);
+  if(reset) printf("RESET\n");
+  printf("\n");
+
+L
+
+----------------- one of the data files used --------------------
+
+A 1 1 1 1 1 0 0 0 0 0
+B 1 0 0 0 0 0 0 0 0 1
+C 0 1 0 1 0 1 0 1 0 1
+D 0 0 0 1 1 1 1 0 0 0
+A 1 1 1 1 1 0 0 0 0 0
+B 1 0 0 0 0 0 0 0 0 1
+C 0 1 0 1 0 1 0 1 0 1
+D 0 0 0 1 1 1 1 0 0 0
+E 1 1 0 0 0 0 0 0 1 1
+F 0 0 0 0 1 1 0 0 0 0
+
+
+
+
+

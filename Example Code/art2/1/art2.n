@@ -1,0 +1,230 @@
+.TH ART2 local
+.SH NAME
+art2 - a simple ART2 simulation program
+.SH SYNOPSIS
+.I art2 [ [input file] [output file]]
+.SH COMMAND LINE PARAMETERS
+
+If invoked with no parameters,
+.I art2
+will first prompt you for an input file name, then for an output file
+name. The program assumes that
+input files have the extension ".inp", and you should only give it the
+base name. For example, to read the input file "p1.inp", you would
+use the name "p1". Similarly, the program will produce two output
+files: a log file (".log") and a data file (".dat").
+
+If invoked with one parameter,
+.I art2
+will attempt to open an input file whose base name is the parameter,
+and you will be prompted for the base name of the output files (this
+way you can use a single input file for multiple output files).
+
+Finally, if invoked with two parameters,
+.I art2
+will assume that the first parameter is the input file base name, and
+the second is the base name for the output files.
+
+.SH OVERVIEW
+.I art2
+is a simple simulator for the ART2 architecture of Carpenter and
+Grossberg for categorization of spatial patterns. This simulator has a
+minimal interface, and is meant mostly to serve as a starting point
+for more specific applications. It was written for G. Carpenter's homework
+assignments in her CN550 course. I have cleaned up the code and added
+many many comments so it will be easy to modify to suit one's taste.
+It should be completely portable to any C architecture. So far I have
+run it on SUN3, SUN4, SUN386i, and IRIS workstations (heck, if it
+works on the IRIS it will work anywhere :-).
+
+.SH ABOUT THE OUTPUT
+The output of this program is very crude.  Basically I left it wide
+open so users could make any changes they wanted to suit whatever
+output viewing devices they have. I have placed comments were
+appropriate to indicate good places for printing out data. The ".log"
+file shows a running record similar to  what you see when you run the
+program. In its present form, the ".dat" file is empty, unless you
+specifically write out the weights. For the simulations I was running
+I only needed the weights, so that's where it is now. You have to add
+commands to the C program if you want to collect specific
+run-time data.
+
+.SH ABOUT THE INPUT FILE
+When you invoke
+.I art2,
+the program reads an input file (see above).
+The first two numbers in the input file should be the dimension of the
+input vectors (p_dim) and the number of input vectors in the file (p_num).
+Both of these numbers must be integers.
+
+Next, the program expects to find p_num vectors, each vector
+consisting of p_dim numbers. These numbers are read in as
+double-precision reals. If the numbers have been read in successfully,
+the program will search for two more integers: M and N. M is the
+number of nodes in the F0-F1 layers. N is the total number of nodes in
+the F1+F2 layer, so that
+.I "the number of F2 nodes is N-M."
+This is done in such an odd way because of historical reason, and
+would be a hassle to change.
+
+If these numbers are omitted,
+.I art2
+will set M=p_dim and N=p_num+M (remember, there are N-M F2 nodes), so
+that potentially each input vector can have its own F2 node. If
+M<p_dim, or if N<=M then the program sets M=p_dim and N=p_num+M.
+
+.SH MAIN PROGRAM
+After the input is read in, and the output files have been opened, the
+user will be placed in the main menu. From here the first thing to do
+is to select a single input pattern for cycling (item 1) or a series
+of patterns (item 2). Please remember that numbering in this program
+starts with zero, so the first pattern is number zero. Then the user
+can run the selected input pattern(s) with or without learning (only
+slow learning is available for art2). In addition, it is possible to
+change parameters, change the weights, or print out the weights. Here
+is a brief outline of what the main menu looks like.
+
+.I "Item 1"
+allows the user to select a single pattern. Typically this is
+used to check how a given pattern will be coded.
+
+.I "Item 2"
+allows the user to select a number of pattern to be presented
+during each learning cycle. The user will be asked to specify how many
+patterns are in the cycle, and then to specify the pattern to be
+presented for each step of the sequence.
+
+.I "Item 3"
+will present whatever pattern(s) are selected, and let the
+simulation find a category without altering the weights. This is
+useful, for example, to see where a new pattern would be coded without
+changing the weights.
+
+.I "Item 4"
+will present whatever pattern(s) are selected, and change the
+weights according to the slow learning rule.
+
+.I "Item 5"
+allows the user to set one of the main parameters. These
+include the vigilance parameter (rho), the threshold (theta), the step
+size for the integrator (h), the maximum allowed number of integration
+steps (nsteps), and the convergence criteria for the dynamic
+activation (ac_diff) and for the weights (z_diff). The last three
+parameters determine how far the system will iterate before it has
+"converged". I suggest you leave these parameters alone unless you
+need to, in which case you should analyze the function "do_cycle" (and
+the other functions that are called from there) to see how I handle
+convergence.
+
+.I "Item 6"
+enters the "weight initialization menu", from which it is
+possible to change individual weights, reset an entire set of weights,
+or print the weights to the ".dat" file.
+
+.I "Item 7"
+does not do much. It resets the array that keeps track of which
+node is stored in which category, and was meant to be a basis for
+wiping the slate and starting again, but that turned out to be
+tricky, so right now the best way to restart is to exit the program.
+
+.I "item 8"
+shows the present setup. It prints out the input vectors, the
+selected patterns (if any), and the main parameters. Printout goes to
+the screen and also to the ".log" file.
+
+.I "item 9"
+is supposed to reset everything, but I am not sure how well
+it's working. One of those things I need to fix.
+
+Finally, any other selection will exit the program. Note: if you enter
+a non-integer selection, the program may freak out and you'll have to
+use control-C to crash out. Before exiting, you are asked to confirm
+your choice. I put this in here because of all the stupid times I
+entered the wrong number and exited the program in the middle of a
+run.
+
+.SH TECHNICAL DESCRIPTION
+The architecture implemented here is based on the following article:
+
+G. Carpenter and S. Grossberg (1987) ``ART 2: self-organization of
+stable category recognition codes for analog input patterns.''
+.I Applied Optics,
+.b 26,
+(23), 4919-4930.
+
+The particular version implemented here is like that shown in figure
+10 of the article. In addition, the F0 loop is made isomorphic to the
+F1 layer, i.e., it consists of two loops and not just one as shown in
+the figure. This has the advantage of buffering the input from TD
+influence. The equations change a little bit in some cases, but I
+tried to document these changes in the code as needed. Note that the
+bottom loop is referred to as F0, the two middle loops as F1, and the
+top loop as F2.  The learning rule used here is the slow learning
+rule, meaning that weights are updated by integrating the appropriate
+differential equation (eqs. 18 & 19 in the article). The fast learning
+rule is good for theoretical analyses, but not very good for realistic
+categorization, particularly with ART2.
+
+Vigilance is based on a comparison between the Q' population in F0 and
+the P population in F1. This can be changed quite easily in the
+function update_R().
+
+There are some tricks to implementing the circuit: 1) Regardless of
+what kind of learning you use (fast or slow), the node activations are
+always assumed to be fast, i.e., you solve them at steady state.
+However, this requires that the activation in the two loops of F1 be
+iterated constantly as the LTM values are updated. This is because
+changes in the Bottom-Up (BU) or Top-Down (TD) LTM traces will change
+the steady state response of the F1 populations.  2) it is suggested
+that every time a reset takes place at F2, all F1 and F0 nodes should
+also be reset. This avoids reverberations from old patterns that can
+badly deform new inputs. The ART3 architecture avoids this problem
+altogether.
+
+Note that in my simulation, I let the weights change at the end of
+every iteration through F1. The alternative approach would be to
+iterate through F1 until activation has settled, then change weights,
+iterate F1 until it settles, then update weights, and so on. This is
+simply my interpretation of the fact that the weights, albeit slower
+than STM activations, are still only finitely slower than STM. The
+effects are minor.
+
+Solution of the differential equation for the weights (slow learning)
+is done with a home-made 4th-order Runge-Kutta solver. This uses a
+fixed step size (h), and is very crude, but does the trick.
+.SH FILES
+.TP
+\fIfile.inp\fP input file.
+Some sample input files can be found in
+/usr/local/unsupported/src/art2/p*.inp (this may differ on other
+machines). There is also a file "ART2.inp" which contains the data
+that was used in the ART2 article, courtesy of the authors.
+.TP
+\fIfile.dat\fP output data file.
+.TP
+\fIfile.log\fP the log file that shows what has happened during a run.
+
+.SH PROGRAMMING NOTES
+The program is broken into four modules. Each C module has an
+accompanying ".h" header. I was very sloppy in this version because I
+adapted it from a strange infrastructure I was using in my own working
+directory, so the variable declarations and other things could be MUCH
+cleaner.
+
+The main function and all the functions that update activations are in
+.I art2.c.
+The input-handling and allocation procedures (and a few other things)
+are in the file
+.I in_vec.c.
+The 4th-order Runge-Kutta function I wrote is in
+.I rk4d.c
+(the "d" stands for double precision).
+SOme of the generic functions (such as the signal function "f" are in
+the file
+.I std_fun.c.
+
+All of this code could stand to be cleaned up.
+
+.SH AUTHOR
+Paolo Gaudiano
+

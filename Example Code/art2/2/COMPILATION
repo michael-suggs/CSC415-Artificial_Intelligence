@@ -1,0 +1,6 @@
+I have tried to compile this art2.c, and this works except that the
+functions floatval(), is_arg(), and stringval() are undefined.  I
+have not implemented them yet.
+
+						Patrick van der Smagt
+

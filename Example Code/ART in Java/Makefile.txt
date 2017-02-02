@@ -1,0 +1,8 @@
+JAVAC = /usr/local/bin/javac
+CLASSPATH = .:/usr/local/lib/classes.zip:/people/phd1/rob/www/java/applets/novelty/classes/
+
+all:
+	${JAVAC} -classpath ${CLASSPATH} *.java
+
+clean:
+	rm *.class *~

@@ -1,0 +1,187 @@
+import NumPy as np
+from random import randint
+__author__ = "Michael Suggs // mjs3607@uncw.edu"
+
+
+class FeedForwardNetwork:
+    # num_nodes = 0
+    #
+    # input_vector = []
+    # layer1_vector = []
+    # node_error = []
+    # biases = []
+
+    # provided in tuple form - tuple for the inputs within a tuple of input, output
+    # e.g. ((input1, input2), output)
+    training_sets = []
+
+    """
+    """
+    def __init__(self, num_inputs, num_hidden, num_outputs):
+        # self.input_vector = np.empty([num_inputs, 1])
+        # self.hidden_vector = np.empty([num_hidden, 1])
+        # self.input_weights = np.random.rand(num_inputs, num_hidden)
+        # self.level1_weights = np.random.rand(num_hidden, 1)
+
+        self.input_vector = np.empty([num_inputs, 1])
+        self.input_weights = np.random.rand(num_inputs, num_hidden)
+        self.hidden_bias = np.ones(num_hidden)
+        self.level1_weights = np.random.rand(num_hidden, 1)
+
+    """
+    """
+    def load_training_data(self, file):
+        with open(file) as f:
+            for line in f:
+                in1, in2, out = line.split(", ")
+                input_tuple = (in1, in2)
+                training_tuple = (input_tuple, out)
+                self.training_sets.append(training_tuple)
+
+    """
+    """
+    def train(self, iterations):
+        i = 0
+
+        while (i < iterations):
+            training_tuple = self.training_sets[
+                randint(0, len(self.training_sets)-1)]
+            self.input_vector[0][0] = training_tuple[0][0]
+            self.input_vector[1][0] = training_tuple[0][1]
+
+            # TODO randomly load in input vectors from input vector array
+            pass
+
+    def feedforward(self):
+        self.hidden_vector = self.input_vector.dot(self.input_weights)
+        output = self.hidden_vector.dot(self.level1_weights)
+        return output
+
+    """
+    """
+    def backpropagate(self):
+        pass
+
+    """
+    """
+    def sigmoid(self):
+        pass
+
+    """
+    """
+    def calc_error(self, output):
+        pass
+
+    """
+    """
+    def load_testing_data(self, file):
+        pass
+
+    """
+    """
+    def test(self):
+        # TODO provide 121 inputs from x,y,z plane in .1 increments
+        pass
+
+
+
+########################################################################################################################
+
+  def train(self, epochs):
+        iter_count = 0
+
+        while iter_count//4 < epochs:
+            #apply inputs
+            training_index = iter_count % 4
+            if training_index == 0:
+                self.output.clear()
+                shuffle(self.training_sets)
+
+            self.input_vector[0] = self.training_sets[training_index][0][0]
+            self.input_vector[1] = self.training_sets[training_index][0][1]
+            target_output = float(self.training_sets[training_index][1])
+
+            while True:
+                # input_transpose = self.input_vector.transpose()
+                # input_weight_dot_pret = input_transpose.dot(self.input_weights)
+                # input_weight_dot = input_weight_dot_pret.transpose()
+                #
+                # # calculates the output of each hidden node
+                # for i in range(self.hidden_vector.shape[0]):
+                #     self.hidden_vector[i] = self.calc_hidden_output(i, input_weight_dot)
+                #
+                # hidden_transpose = self.hidden_vector.transpose()
+                # hidden_weight_dot_pret = hidden_transpose.dot(self.hidden_weights)
+                # hidden_weight_dot = hidden_weight_dot_pret.transpose()
+                #
+                # # calculates the final output of the network
+                # netj = (self.output_bias[0] * self.output_bias_weights[0]) + hidden_weight_dot
+                # output = (1/(1+(np.exp(-1 * netj))))
+
+                # output_error = (target_output - output.item(0)) * output.item(0) * (1 - output.item(0))
+                # # if error <= target error, break
+                # if np.abs(target_output - output.item(0)) <= 0.1:
+                #     break
+                #
+                # else:
+                #     self.output_bias_weights[0] += self.eta * output_error * self.output_bias[0]
+                #
+                #     hidden_error = np.zeros((self.hidden_vector.shape[0], 1))
+                #     for i in range(self.hidden_vector.shape[0]):
+                #         hidden_error[i] = self.hidden_vector[i]\
+                #                           * (1 - self.hidden_vector[i])\
+                #                           + (output_error * self.hidden_weights[i])
+                #
+                #     # compute weight adjustments
+                #     # delta_hidden_weight = np.zeros(len(self.hidden_weights))
+                #     for i in range(self.hidden_weights.shape[0]):
+                #         self.hidden_weights[i] += self.eta * output_error * self.hidden_vector[i]
+                #
+                #     # calc input weights
+                #     for i in range(self.input_weights.shape[0]):
+                #         for j in range(self.input_weights.shape[1]):
+                #             self.input_weights[i][j] += self.eta\
+                #                                         * hidden_error[i]\
+                #                                         * self.input_vector[j]
+                out = self.feedforward()
+                if self.backpropagate(out, target_output) == 1:
+                    break
+
+            print("Iteration finished")
+            self.output.append(((self.input_vector[0].item(0), self.input_vector[1].item(0)), out.item(0)))
+            iter_count += 1
+
+########################################################################################################################
+
+    # """
+    # """
+    # def train(self, epochs):
+    #     iter_count = 0
+    #
+    #     while iter_count//len(self.training_sets) < epochs:
+    #         #apply inputs
+    #         training_index = iter_count % len(self.training_sets)
+    #         if training_index == 0 and iter_count != 0:
+    #             # backprop // break
+    #             self.output.clear()
+    #             shuffle(self.training_sets)
+    #
+    #         self.input_vector[0] = self.training_sets[training_index][0][0]
+    #         self.input_vector[1] = self.training_sets[training_index][0][1]
+    #         target_output = float(self.training_sets[training_index][1])
+    #
+    #         # learning loop
+    #         # run through each pattern and backprop for each
+    #         # FEEDFORWARD AGAIN
+    #         # THEN calc TSSE
+    #         while True:
+    #             out = self.feedforward()
+    #             self.backpropagate(out, target_output)
+    #             out2 = self.feedforward()
+    #             if self.tsse(out2) == 1:
+    #                 # DONE FALSE BREAK
+    #                 pass
+    #
+    #         # print("Iteration finished")
+    #         self.output.append(((self.input_vector[0].item(0), self.input_vector[1].item(0)), out.item(0)))
+    #         iter_count += 1
